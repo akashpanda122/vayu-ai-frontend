@@ -13,6 +13,9 @@ import { WeatherForecast } from "../components/weather-forecast";
 import { HourlyTemperature } from "../components/hourly-temprature";
 import WeatherSkeleton from "../components/loading-skeleton";
 import { FavoriteCities } from "@/components/favorite-cities";
+import AIModelDetails from '@/components/AIModelDetails';
+//import InteractiveChart from "@/components/InteractiveChart";
+import { useState } from 'react'
 
 export function WeatherDashboard() {
   const {
@@ -25,6 +28,19 @@ export function WeatherDashboard() {
   const weatherQuery = useWeatherQuery(coordinates);
   const forecastQuery = useForecastQuery(coordinates);
   const locationQuery = useReverseGeocodeQuery(coordinates);
+  const [selectedModel, setSelectedModel] = useState('medium-res')
+
+  setSelectedModel
+  /*const mockWeatherData = [
+    { id: 1, lat: 28.6139, lng: 77.2090, name: 'New Delhi', temperature: 32, humidity: 65, severity: 'high' },
+    { id: 2, lat: 19.0760, lng: 72.8777, name: 'Mumbai', temperature: 29, humidity: 80, severity: 'medium' },
+    { id: 3, lat: 12.9716, lng: 77.5946, name: 'Bangalore', temperature: 26, humidity: 70, severity: 'low' }
+  ]*/
+
+  /*const handleTimeRangeChange = (range) => {
+    // In a real app, this would fetch new data for the selected time range
+    console.log('Time range changed:', range)
+  }*/
 
   // Function to refresh all data
   const handleRefresh = () => {
@@ -76,17 +92,13 @@ export function WeatherDashboard() {
 
   if (weatherQuery.error || forecastQuery.error) {
     return (
-      <Alert variant="destructive">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription className="flex flex-col gap-4">
-          <p>Failed to fetch weather data. Please try again.</p>
-          <Button variant="outline" onClick={handleRefresh} className="w-fit">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Retry
-          </Button>
-        </AlertDescription>
-      </Alert>
+      <>
+        {/*<InteractiveChart 
+            data={mockWeatherData}
+            onTimeRangeChange={handleTimeRangeChange}
+        />*/}
+        <AIModelDetails modelId={selectedModel} />
+      </>
     );
   }
 
