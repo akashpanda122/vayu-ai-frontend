@@ -1,10 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { ArrowDown, ArrowUp, Droplets, Wind } from "lucide-react";
 import { format } from "date-fns";
+import { useState } from "react";
 import type { ForecastData } from "@/api/types";
+import { Button } from "./ui/button";
 
 interface WeatherForecastProps {
-  data: ForecastData;
+  data?: ForecastData; // Make data optional since we're adding manual data
 }
 
 interface DailyForecast {
@@ -22,11 +24,12 @@ interface DailyForecast {
 }
 
 export function WeatherForecast({ data }: WeatherForecastProps) {
-
+  const [showExtended, setShowExtended] = useState(false);
+  
   // Manual data for the next 5 days
   const manualForecastData = [
     {
-      date: Math.floor(new Date(2025, 4, 14).getTime() / 1000), // May 9, 2025
+      date: Math.floor(new Date(2025, 4, 9).getTime() / 1000), // May 9, 2025
       temp_min: 18,
       temp_max: 24,
       humidity: 65,
@@ -39,7 +42,7 @@ export function WeatherForecast({ data }: WeatherForecastProps) {
       }
     },
     {
-      date: Math.floor(new Date(2025, 4, 15).getTime() / 1000), // May 10, 2025
+      date: Math.floor(new Date(2025, 4, 10).getTime() / 1000), // May 10, 2025
       temp_min: 17,
       temp_max: 25,
       humidity: 70,
@@ -52,7 +55,7 @@ export function WeatherForecast({ data }: WeatherForecastProps) {
       }
     },
     {
-      date: Math.floor(new Date(2025, 4, 16).getTime() / 1000), // May 11, 2025
+      date: Math.floor(new Date(2025, 4, 11).getTime() / 1000), // May 11, 2025
       temp_min: 15,
       temp_max: 22,
       humidity: 75,
@@ -65,7 +68,7 @@ export function WeatherForecast({ data }: WeatherForecastProps) {
       }
     },
     {
-      date: Math.floor(new Date(2025, 4, 17).getTime() / 1000), // May 12, 2025
+      date: Math.floor(new Date(2025, 4, 12).getTime() / 1000), // May 12, 2025
       temp_min: 16,
       temp_max: 23,
       humidity: 68,
@@ -78,7 +81,7 @@ export function WeatherForecast({ data }: WeatherForecastProps) {
       }
     },
     {
-      date: Math.floor(new Date(2025, 4, 18).getTime() / 1000), // May 13, 2025
+      date: Math.floor(new Date(2025, 4, 13).getTime() / 1000), // May 13, 2025
       temp_min: 19,
       temp_max: 26,
       humidity: 60,
@@ -92,47 +95,60 @@ export function WeatherForecast({ data }: WeatherForecastProps) {
     }
   ];
 
+  // Process actual data if provided
   let actualDays: DailyForecast[] = [];
+  
+  if (data) {
+    // Process real data as before
+    const dailyForecasts = data.list.reduce((acc, forecast) => {
+      const date = format(new Date(forecast.dt * 1000), "yyyy-MM-dd");
 
-  if(data) {
-  // Group forecast by day and get daily min/max
-  const dailyForecasts = data.list.reduce((acc, forecast) => {
-    const date = format(new Date(forecast.dt * 1000), "yyyy-MM-dd");
+      if (!acc[date]) {
+        acc[date] = {
+          temp_min: forecast.main.temp_min,
+          temp_max: forecast.main.temp_max,
+          humidity: forecast.main.humidity,
+          wind: forecast.wind.speed,
+          weather: forecast.weather[0],
+          date: forecast.dt,
+        };
+      } else {
+        acc[date].temp_min = Math.min(acc[date].temp_min, forecast.main.temp_min);
+        acc[date].temp_max = Math.max(acc[date].temp_max, forecast.main.temp_max);
+      }
 
-    if (!acc[date]) {
-      acc[date] = {
-        temp_min: forecast.main.temp_min,
-        temp_max: forecast.main.temp_max,
-        humidity: forecast.main.humidity,
-        wind: forecast.wind.speed,
-        weather: forecast.weather[0],
-        date: forecast.dt,
-      };
-    } else {
-      acc[date].temp_min = Math.min(acc[date].temp_min, forecast.main.temp_min);
-      acc[date].temp_max = Math.max(acc[date].temp_max, forecast.main.temp_max);
-    }
+      return acc;
+    }, {} as Record<string, DailyForecast>);
 
-    return acc;
-  }, {} as Record<string, DailyForecast>);
-
-  // Get next 5 days
+    // Get next 5 days from the actual data
     actualDays = Object.values(dailyForecasts).slice(1, 6);
   }
-
-  const nextDays = [...actualDays, ...manualForecastData];
+  
+  // Combine actual data with manual data
+  const allDays = [...actualDays, ...manualForecastData];
+  
+  // Choose which days to display based on the toggle
+  const displayDays = showExtended ? allDays : actualDays.length > 0 ? actualDays : manualForecastData.slice(0, 5);
 
   // Format temperature
   const formatTemp = (temp: number) => `${Math.round(temp)}°`;
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>5-Day Forecast</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle>{showExtended ? "Extended Forecast" : "5-Day Forecast"}</CardTitle>
+        <Button 
+          onClick={() => setShowExtended(!showExtended)} 
+          variant="outline" 
+          size="sm"
+          className="text-xs"
+        >
+          {showExtended ? "Show Standard" : "Show Extended"}
+        </Button>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4">
-          {nextDays.map((day) => (
+          {displayDays.map((day) => (
             <div
               key={day.date}
               className="grid grid-cols-3 items-center gap-4 rounded-lg border p-4"
