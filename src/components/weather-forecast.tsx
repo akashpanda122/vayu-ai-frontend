@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { ArrowDown, ArrowUp, Droplets, Wind } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "./ui/card";
+import { ArrowDown, ArrowUp, Droplets, Wind, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import { useState } from "react";
 import type { ForecastData } from "@/api/types";
@@ -24,7 +24,8 @@ interface DailyForecast {
 }
 
 export function WeatherForecast({ data }: WeatherForecastProps) {
-  const [showExtended, setShowExtended] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const daysPerPage = 5;
   
   // Manual data for the next 5 days
   const manualForecastData = [
@@ -127,24 +128,25 @@ export function WeatherForecast({ data }: WeatherForecastProps) {
   // Combine actual data with manual data
   const allDays = [...actualDays, ...manualForecastData];
   
-  // Choose which days to display based on the toggle
-  const displayDays = showExtended ? allDays : actualDays.length > 0 ? actualDays : manualForecastData.slice(0, 5);
+  // Calculate pagination
+  const totalPages = Math.ceil(allDays.length / daysPerPage);
+  const startIndex = (currentPage - 1) * daysPerPage;
+  const displayDays = allDays.slice(startIndex, startIndex + daysPerPage);
+  
+  // Handle pagination
+  const goToPage = (pageNumber: number) => {
+    setCurrentPage(Math.max(1, Math.min(pageNumber, totalPages)));
+  };
 
   // Format temperature
   const formatTemp = (temp: number) => `${Math.round(temp)}°`;
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle>{showExtended ? "Extended Forecast" : "5-Day Forecast"}</CardTitle>
-        <Button 
-          onClick={() => setShowExtended(!showExtended)} 
-          variant="outline" 
-          size="sm"
-          className="text-xs"
-        >
-          {showExtended ? "Show Standard" : "Show Extended"}
-        </Button>
+      <CardHeader className="pb-2">
+        <CardTitle>
+          {currentPage === 1 ? "5-Day Forecast" : `Extended Forecast (Days ${startIndex + 1}-${Math.min(startIndex + daysPerPage, allDays.length)})`}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid gap-4">
@@ -187,6 +189,41 @@ export function WeatherForecast({ data }: WeatherForecastProps) {
           ))}
         </div>
       </CardContent>
+      <CardFooter className="flex items-center justify-center pt-0">
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span className="sr-only">Previous</span>
+          </Button>
+          
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <Button
+              key={page}
+              variant={currentPage === page ? "default" : "outline"}
+              size="sm"
+              onClick={() => goToPage(page)}
+              className="w-8 h-8 p-0"
+            >
+              {page}
+            </Button>
+          ))}
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight className="h-4 w-4" />
+            <span className="sr-only">Next</span>
+          </Button>
+        </div>
+      </CardFooter>
     </Card>
   );
 }
