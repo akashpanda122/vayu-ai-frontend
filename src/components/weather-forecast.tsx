@@ -22,6 +22,79 @@ interface DailyForecast {
 }
 
 export function WeatherForecast({ data }: WeatherForecastProps) {
+
+  // Manual data for the next 5 days
+  const manualForecastData = [
+    {
+      date: Math.floor(new Date(2025, 4, 14).getTime() / 1000), // May 9, 2025
+      temp_min: 18,
+      temp_max: 24,
+      humidity: 65,
+      wind: 3.2,
+      weather: {
+        id: 800,
+        main: "Clear",
+        description: "clear sky",
+        icon: "01d"
+      }
+    },
+    {
+      date: Math.floor(new Date(2025, 4, 15).getTime() / 1000), // May 10, 2025
+      temp_min: 17,
+      temp_max: 25,
+      humidity: 70,
+      wind: 4.1,
+      weather: {
+        id: 801,
+        main: "Clouds",
+        description: "few clouds",
+        icon: "02d"
+      }
+    },
+    {
+      date: Math.floor(new Date(2025, 4, 16).getTime() / 1000), // May 11, 2025
+      temp_min: 15,
+      temp_max: 22,
+      humidity: 75,
+      wind: 5.3,
+      weather: {
+        id: 500,
+        main: "Rain",
+        description: "light rain",
+        icon: "10d"
+      }
+    },
+    {
+      date: Math.floor(new Date(2025, 4, 17).getTime() / 1000), // May 12, 2025
+      temp_min: 16,
+      temp_max: 23,
+      humidity: 68,
+      wind: 4.8,
+      weather: {
+        id: 802,
+        main: "Clouds",
+        description: "scattered clouds",
+        icon: "03d"
+      }
+    },
+    {
+      date: Math.floor(new Date(2025, 4, 18).getTime() / 1000), // May 13, 2025
+      temp_min: 19,
+      temp_max: 26,
+      humidity: 60,
+      wind: 2.9,
+      weather: {
+        id: 800,
+        main: "Clear",
+        description: "clear sky",
+        icon: "01d"
+      }
+    }
+  ];
+
+  let actualDays: DailyForecast[] = [];
+
+  if(data) {
   // Group forecast by day and get daily min/max
   const dailyForecasts = data.list.reduce((acc, forecast) => {
     const date = format(new Date(forecast.dt * 1000), "yyyy-MM-dd");
@@ -44,7 +117,10 @@ export function WeatherForecast({ data }: WeatherForecastProps) {
   }, {} as Record<string, DailyForecast>);
 
   // Get next 5 days
-  const nextDays = Object.values(dailyForecasts).slice(1, 6);
+    actualDays = Object.values(dailyForecasts).slice(1, 6);
+  }
+
+  const nextDays = [...actualDays, ...manualForecastData];
 
   // Format temperature
   const formatTemp = (temp: number) => `${Math.round(temp)}°`;
